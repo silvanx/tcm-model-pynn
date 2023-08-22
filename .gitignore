@@ -3,3 +3,5 @@
 Results/
 __pycache__/
 *.c
+.vscode
+.pytest_cache
