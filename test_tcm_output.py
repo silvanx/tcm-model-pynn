@@ -3,7 +3,21 @@ from pathlib import Path
 import numpy as np
 
 def neo_analogsignals_identical(signal1, signal2):
-    return False
+    assert np.all(signal1 == signal2)
+    struct_info_fields = [
+        "units",
+        "sampling_rate",
+        "t_start",
+        "name"
+    ]
+    for field in struct_info_fields:
+        assert getattr(signal1, field) == getattr(signal2, field)
+    assert signal1.annotations.keys() == signal2.annotations.keys()
+    
+    for key in signal1.annotations:
+        assert np.all(signal1.annotations[key] == signal2.annotations[key])
+    
+    return True
 
 def neo_spiketrains_identical(train1, train2):
     assert len(train1) == len(train2)
@@ -27,7 +41,7 @@ def neo_segments_identical(seg1, seg2):
     assert neo_spiketrains_identical(seg1.spiketrains, seg2.spiketrains)
     assert len(seg1.analogsignals) == len(seg2.analogsignals)
     for i in range(len(seg1.analogsignals)):
-        assert neo_analogsignals_identical(seg1.analogsignals, seg2.analogsignals)
+        assert neo_analogsignals_identical(seg1.analogsignals[i], seg2.analogsignals[i])
     
     return True
 
@@ -46,8 +60,7 @@ def neo_blocks_identical(block1, block2):
 def neo_structs_almost_identical(file1, file2):
     struct1 = neo.NeoMatlabIO(file1).read()
     struct2 = neo.NeoMatlabIO(file2).read()
-    if len(struct1) != len(struct2):
-        return False
+    assert len(struct1) == len(struct2)
     for i in range(len(struct1)):
         block1 = struct1[i]
         block2 = struct2[i]
@@ -62,16 +75,26 @@ def test_d_layer():
     assert neo_structs_almost_identical(file_test, file_original)
 
 def test_s_layer():
-    raise NotImplementedError
+    file_test = Path("Results/S_Layer.mat")
+    file_original = Path("Results/original_S_Layer.mat")
+    assert neo_structs_almost_identical(file_test, file_original)
 
 def test_m_layer():
-    raise NotImplementedError
+    file_test = Path("Results/M_Layer.mat")
+    file_original = Path("Results/original_M_Layer.mat")
+    assert neo_structs_almost_identical(file_test, file_original)
 
 def test_interneurons():
-    raise NotImplementedError
+    file_test = Path("Results/CI_Neurons.mat")
+    file_original = Path("Results/original_CI_Neurons.mat")
+    assert neo_structs_almost_identical(file_test, file_original)
 
 def test_tcr_nucleus():
-    raise NotImplementedError
+    file_test = Path("Results/TCR_Nucleus.mat")
+    file_original = Path("Results/original_TCR_Nucleus.mat")
+    assert neo_structs_almost_identical(file_test, file_original)
 
 def test_tr_nucleus():
-    raise NotImplementedError
+    file_test = Path("Results/TR_Nucleus.mat")
+    file_original = Path("Results/original_TR_Nucleus.mat")
+    assert neo_structs_almost_identical(file_test, file_original)
