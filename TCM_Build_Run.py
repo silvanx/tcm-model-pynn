@@ -885,28 +885,28 @@ if __name__ == '__main__':
 
 
 
-# Simulate the model for 
-print("\nRunning the isolated thalamo-cortical microcircuit simulation ...")
-start=timer()
-run(simulation_time)
-end = timer()	
+    # Simulate the model for 
+    print("\nRunning the isolated thalamo-cortical microcircuit simulation ...")
+    start=timer()
+    run(simulation_time)
+    end = timer()	
 
-print("\n Simulation Done!\n Total elapsed time:", end-start, "seconds.\n")
+    print("\n Simulation Done!\n Total elapsed time:", end-start, "seconds.\n")
 
-#================= this reset the network time for further simulations, no netwrok structure and recording will be changed =======
-# KO: Not really needed and it fails with newer versions of numpy
-# reset()
+    #================= this reset the network time for further simulations, no netwrok structure and recording will be changed =======
+    # KO: Not really needed and it fails with newer versions of numpy
+    # reset()
 
 
-# Save simulation results for postprecessing:
-print("Write the model outputs to .mat files for postprocessing...\n")
+    # Save simulation results for postprecessing:
+    print("Write the model outputs to .mat files for postprocessing...\n")
 
-# Write the specified  recorded variables to .mat files (membrane voltages, postsynaptic currents and spike times):
-S_layer_neurons.write_data("Results/S_Layer.mat")
-M_layer_neurons.write_data("Results/M_Layer.mat")
-D_layer_neurons.write_data("Results/D_Layer.mat")
-CI_neurons.write_data("Results/CI_Neurons.mat")
-TCR_TC_neurons.write_data("Results/TCR_Nucleus.mat")
-TRN_TR_neurons.write_data("Results/TR_Nucleus.mat")
+    # Write the specified  recorded variables to .mat files (membrane voltages, postsynaptic currents and spike times):
+    S_layer_neurons.write_data("Results/S_Layer.mat")
+    M_layer_neurons.write_data("Results/M_Layer.mat")
+    D_layer_neurons.write_data("Results/D_Layer.mat")
+    CI_neurons.write_data("Results/CI_Neurons.mat")
+    TCR_TC_neurons.write_data("Results/TCR_Nucleus.mat")
+    TRN_TR_neurons.write_data("Results/TR_Nucleus.mat")
 
-print("Done!")
+    print("Done!")
