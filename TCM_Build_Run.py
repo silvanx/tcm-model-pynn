@@ -145,7 +145,7 @@ if __name__ == '__main__':
     # Cortical layers and Interneuron Assemblies:
     ###--------------------------------------------------- S Layer ----------------------------------------------------### 
     # S layer - Regular Spiking Neurons:
-    S_layer_RS_neuron_num = round(0.5*pop_size)
+    S_layer_RS_neuron_num = round(0.5 * pop_size)
     S_layer_RS_Population = Population(S_layer_RS_neuron_num, Izhikevich_Type(**RS_parameters))
 
     # Set the seed for the random object for parameter variation
@@ -154,12 +154,12 @@ if __name__ == '__main__':
     # Add variability to c values
     r = np.random.uniform(0, 1, S_layer_RS_neuron_num)
     c_value = S_layer_RS_Population.get('c')
-    updated_c_values = c_value + 15*(r**2)
+    updated_c_values = c_value + 15 * (r ** 2)
     S_layer_RS_Population.set(c = updated_c_values)
 
     # Add variability to d values
     d_value = S_layer_RS_Population.get('d')
-    updated_d_values = d_value - 0.6*(r**2)
+    updated_d_values = d_value - 0.6 * (r ** 2)
     S_layer_RS_Population.set(d = updated_d_values)
 
     # S layer - Intermittent Bursting Neurons
@@ -169,12 +169,12 @@ if __name__ == '__main__':
     # Add variability to c values
     r = np.random.uniform(0, 1, S_layer_IB_neuron_num)
     c_value = S_layer_IB_Population.get('c')
-    updated_c_values = c_value + 15*(r**2)
+    updated_c_values = c_value + 15 * (r ** 2)
     S_layer_IB_Population.set(c = updated_c_values)
 
     # Add variability to d values
     d_value = S_layer_IB_Population.get('d')
-    updated_d_values = d_value - 0.6*(r**2)
+    updated_d_values = d_value - 0.6 * (r ** 2)
     S_layer_IB_Population.set(d = updated_d_values)
 
     # Make assembly for the S layer - Contains RS and IB neurons
@@ -188,12 +188,12 @@ if __name__ == '__main__':
     # Add variability to c values
     r = np.random.uniform(0, 1, M_layer_RS_neuron_num)
     c_value = M_layer_RS_Population.get('c')
-    updated_c_values = c_value + 15*(r**2)
+    updated_c_values = c_value + 15 * (r ** 2)
     M_layer_RS_Population.set(c = updated_c_values)
 
     # Add variability to d values
     d_value = M_layer_RS_Population.get('d')
-    updated_d_values = d_value - 0.6*(r**2)
+    updated_d_values = d_value - 0.6 * (r ** 2)
     M_layer_RS_Population.set(d = updated_d_values)
 
     # Make assembly for the M layer - Contains only RS neurons
@@ -201,33 +201,33 @@ if __name__ == '__main__':
 
     ###--------------------------------------------------- D Layer ----------------------------------------------------### 
     # D layer - Regular Spiking Neurons:
-    D_layer_RS_neuron_num = round(0.7*pop_size)
-    D_layer_RS_Population = Population(D_layer_RS_neuron_num, Izhikevich_Type(**RS_parameters))
+    D_layer_RS_neuron_num = round(0.7 * pop_size)
+    D_layer_RS_Population = Population(D_layer_RS_neuron_num, Izhikevich_Type(**RS_parameters), label="D_layer_RS")
 
     # Add variability to c values
     r = np.random.uniform(0, 1, D_layer_RS_neuron_num)
     c_value = D_layer_RS_Population.get('c')
-    updated_c_values = c_value + 15*(r**2)
+    updated_c_values = c_value + 15 * (r ** 2)
     D_layer_RS_Population.set(c = updated_c_values)
 
     # Add variability to d values
     d_value = D_layer_RS_Population.get('d')
-    updated_d_values = d_value - 0.6*(r**2)
+    updated_d_values = d_value - 0.6 * (r ** 2)
     D_layer_RS_Population.set(d = updated_d_values)
 
     # D layer - Intermittent Bursting Neurons
     D_layer_IB_neuron_num = pop_size - D_layer_RS_neuron_num
-    D_layer_IB_Population = Population(D_layer_IB_neuron_num, Izhikevich_Type(**IB_parameters))
+    D_layer_IB_Population = Population(D_layer_IB_neuron_num, Izhikevich_Type(**IB_parameters), label="D_Layer_IB")
 
     # Add variability to c values
     r = np.random.uniform(0, 1, D_layer_IB_neuron_num)
     c_value = D_layer_IB_Population.get('c')
-    updated_c_values = c_value + 15*(r**2)
+    updated_c_values = c_value + 15 * (r ** 2)
     D_layer_IB_Population.set(c = updated_c_values)
 
     # Add variability to d values
     d_value = D_layer_IB_Population.get('d')
-    updated_d_values = d_value - 0.6*(r**2)
+    updated_d_values = d_value - 0.6 * (r ** 2)
     D_layer_IB_Population.set(d = updated_d_values)
 
     # Make assembly for the D layer - Contains RS and IB neurons
@@ -235,18 +235,18 @@ if __name__ == '__main__':
 
     ###--------------------------------------------------- Cortical Interneurons ----------------------------------------------------### 
     # Cortical Interneurons (CI) - Fast Spiking Interneurons:
-    CI_FS_neuron_num = round(0.5*pop_size)
+    CI_FS_neuron_num = round(0.5 * pop_size)
     CI_FS_Population = Population(CI_FS_neuron_num, Izhikevich_Type(**FS_parameters))
 
     # Add variability to a values
     r = np.random.uniform(0, 1, CI_FS_neuron_num)
     a_value = CI_FS_Population.get('a_')
-    updated_a_values = a_value + 0.008*r
+    updated_a_values = a_value + 0.008 * r
     CI_FS_Population.set(a_ = updated_a_values)
 
     # Add variability to b values
     b_value = CI_FS_Population.get('b')
-    updated_b_values = b_value - 0.005*r
+    updated_b_values = b_value - 0.005 * r
     CI_FS_Population.set(b = updated_b_values)
 
     # Cortical Interneurons (CI) - Low-Threshold Spiking Interneurons:
@@ -256,30 +256,30 @@ if __name__ == '__main__':
     # Add variability to a values
     r = np.random.uniform(0, 1, CI_LTS_neuron_num)
     a_value = CI_LTS_Population.get('a_')
-    updated_a_values = a_value + 0.008*r
+    updated_a_values = a_value + 0.008 * r
     CI_LTS_Population.set(a_ = updated_a_values)
 
     # Add variability to b values
     b_value = CI_LTS_Population.get('b')
-    updated_b_values = b_value - 0.005*r
+    updated_b_values = b_value - 0.005 * r
     CI_LTS_Population.set(b = updated_b_values)
 
     # Make assembly for the cortical interneurons - Contains both Fast Spiking and Low-Threshold Spiking Interneurons
     CI_neurons = CI_FS_Population + CI_LTS_Population
 
     ###--------------------------------------------------- Thalamic Reticular Nucleus (TRN) ----------------------------------------------------### 
-    TRN_TR_neuron_num = round(0.4*pop_size)
+    TRN_TR_neuron_num = round(0.4 * pop_size)
     TRN_TR_Population = Population(TRN_TR_neuron_num, Izhikevich_Type(**Ret_parameters))
 
     # Add variability to a values
     r = np.random.uniform(0, 1, TRN_TR_neuron_num)
     a_value = TRN_TR_Population.get('a_')
-    updated_a_values = a_value + 0.008*r
+    updated_a_values = a_value + 0.008 * r
     TRN_TR_Population.set(a_ = updated_a_values)
 
     # Add variability to b values
     b_value = TRN_TR_Population.get('b')
-    updated_b_values = b_value - 0.005*r
+    updated_b_values = b_value - 0.005 * r
     TRN_TR_Population.set(b = updated_b_values)	
 
     # Make assembly for Thalamic Reticular Nucleus
@@ -292,12 +292,12 @@ if __name__ == '__main__':
     # Add variability to a values
     r = np.random.uniform(0, 1, TCR_TC_neuron_num)
     a_value = TCR_TC_Population.get('a_')
-    updated_a_values = a_value + 0.008*r
+    updated_a_values = a_value + 0.008 * r
     TCR_TC_Population.set(a_ = updated_a_values)
 
     # Add variability to b values
     b_value = TCR_TC_Population.get('b')
-    updated_b_values = b_value - 0.005*r
+    updated_b_values = b_value - 0.005 * r
     TCR_TC_Population.set(b = updated_b_values)
 
     # Make assembly for Thalamo-Cortical Relay Nucleus
@@ -375,70 +375,70 @@ if __name__ == '__main__':
     print("Factor: ", PD_factor)
     print("Be patient, it takes a while...")
     # Define scaling factor for rescaling original publication synaptic weights for NEURON - more details of current rescaling are described in Izh.mod
-    cell_diam = 10.0/pi
+    cell_diam = 10.0 / pi
     cell_L = 10.0
     cell_cm = 1.0
-    synaptic_rescale_factor= pi * cell_diam * cell_L * cell_cm * 1e-5 				
+    synaptic_rescale_factor = pi * cell_diam * cell_L * cell_cm * 1e-5 				
 
     # Rescale factor for debugging the synaptic weights	- originally implemented as part of a parameter sweep to find a suitable value to match Matlab model behaviour
     #conversion_factor = float(sys.argv[2])
     #conversion_factor = 0.006024489795918
     conversion_factor = 1
-    synaptic_rescale_factor = conversion_factor*synaptic_rescale_factor
+    synaptic_rescale_factor = conversion_factor * synaptic_rescale_factor
 
     # Max Coupling Strengths within each structure
-    g_S_Layer_S_Layer = synaptic_rescale_factor * 5e1/PD_factor
-    g_M_Layer_M_Layer = synaptic_rescale_factor * 5e1/PD_factor
+    g_S_Layer_S_Layer = synaptic_rescale_factor * 5e1 / PD_factor
+    g_M_Layer_M_Layer = synaptic_rescale_factor * 5e1 / PD_factor
     #coupling_rescale_factor = float(sys.argv[2])
-    g_D_Layer_D_Layer = 1*synaptic_rescale_factor * 5e1/PD_factor
+    g_D_Layer_D_Layer = 1.0 * synaptic_rescale_factor * 5e1 / PD_factor
     #g_D_Layer_D_Layer = synaptic_rescale_factor * 5e1/PD_factor
-    g_CI_CI = 1.0 * synaptic_rescale_factor * 5e1/PD_factor
+    g_CI_CI = 1.0 * synaptic_rescale_factor * 5e1 / PD_factor
     #coupling_rescale_factor = float(sys.argv[2])
-    g_TRN_TRN = 1.0 * synaptic_rescale_factor * 5e1/PD_factor
-    g_TCR_TCR = synaptic_rescale_factor * 0/PD_factor
+    g_TRN_TRN = 1.0 * synaptic_rescale_factor * 5e1 / PD_factor
+    g_TCR_TCR = synaptic_rescale_factor * 0 / PD_factor
 
     # Max Coupling Strengths between structures
     # Couplings to S Layer
-    g_M_Layer_S_Layer = synaptic_rescale_factor * 3e2/PD_factor
-    g_D_Layer_S_Layer = synaptic_rescale_factor * 5e2/PD_factor
-    g_CI_S_Layer = synaptic_rescale_factor * 7.5e2/PD_factor
-    g_TRN_S_Layer = synaptic_rescale_factor * 0/PD_factor
-    g_TCR_S_Layer = synaptic_rescale_factor * 0/PD_factor
+    g_M_Layer_S_Layer = synaptic_rescale_factor * 3e2 / PD_factor
+    g_D_Layer_S_Layer = synaptic_rescale_factor * 5e2 / PD_factor
+    g_CI_S_Layer = synaptic_rescale_factor * 7.5e2 / PD_factor
+    g_TRN_S_Layer = synaptic_rescale_factor * 0 / PD_factor
+    g_TCR_S_Layer = synaptic_rescale_factor * 0 / PD_factor
 
     # Couplings to M Layer
-    g_S_Layer_M_Layer = synaptic_rescale_factor * 1e1/PD_factor
-    g_D_Layer_M_Layer = synaptic_rescale_factor * 0/PD_factor
-    g_CI_M_Layer = synaptic_rescale_factor * 7.5e2/PD_factor
-    g_TRN_M_Layer = synaptic_rescale_factor * 0/PD_factor
-    g_TCR_M_Layer = synaptic_rescale_factor * 0/PD_factor
+    g_S_Layer_M_Layer = synaptic_rescale_factor * 1e1 / PD_factor
+    g_D_Layer_M_Layer = synaptic_rescale_factor * 0 / PD_factor
+    g_CI_M_Layer = synaptic_rescale_factor * 7.5e2 / PD_factor
+    g_TRN_M_Layer = synaptic_rescale_factor * 0 / PD_factor
+    g_TCR_M_Layer = synaptic_rescale_factor * 0 / PD_factor
 
     # Couplings to D Layer
-    g_S_Layer_D_Layer = synaptic_rescale_factor * 3e2/PD_factor
-    g_M_Layer_D_Layer = synaptic_rescale_factor * 0/PD_factor
-    g_CI_D_Layer = synaptic_rescale_factor * 5e3/PD_factor
-    g_TRN_D_Layer = synaptic_rescale_factor * 0/PD_factor
-    g_TCR_D_Layer = 1.0 * synaptic_rescale_factor * 1e3/PD_factor
+    g_S_Layer_D_Layer = synaptic_rescale_factor * 3e2 / PD_factor
+    g_M_Layer_D_Layer = synaptic_rescale_factor * 0 / PD_factor
+    g_CI_D_Layer = synaptic_rescale_factor * 5e3 / PD_factor
+    g_TRN_D_Layer = synaptic_rescale_factor * 0 / PD_factor
+    g_TCR_D_Layer = 1.0 * synaptic_rescale_factor * 1e3 / PD_factor
 
     # Couplings to CI neurons
-    g_S_Layer_CI = synaptic_rescale_factor * 2e2/PD_factor
-    g_M_Layer_CI = synaptic_rescale_factor * 2e2/PD_factor
-    g_D_Layer_CI = synaptic_rescale_factor * 2e2/PD_factor
-    g_TRN_CI = synaptic_rescale_factor * 0/PD_factor
-    g_TCR_CI = synaptic_rescale_factor * 1e3/PD_factor
+    g_S_Layer_CI = synaptic_rescale_factor * 2e2 / PD_factor
+    g_M_Layer_CI = synaptic_rescale_factor * 2e2 / PD_factor
+    g_D_Layer_CI = synaptic_rescale_factor * 2e2 / PD_factor
+    g_TRN_CI = synaptic_rescale_factor * 0 / PD_factor
+    g_TCR_CI = synaptic_rescale_factor * 1e3 / PD_factor
 
     # Couplings to TRN neurons
-    g_S_Layer_TRN = synaptic_rescale_factor * 0/PD_factor
-    g_M_Layer_TRN = synaptic_rescale_factor * 0/PD_factor
-    g_D_Layer_TRN = synaptic_rescale_factor * 1e2/PD_factor
-    g_CI_TRN = synaptic_rescale_factor * 0/PD_factor
-    g_TCR_TRN = synaptic_rescale_factor * 5e2/PD_factor
+    g_S_Layer_TRN = synaptic_rescale_factor * 0 / PD_factor
+    g_M_Layer_TRN = synaptic_rescale_factor * 0 / PD_factor
+    g_D_Layer_TRN = synaptic_rescale_factor * 1e2 / PD_factor
+    g_CI_TRN = synaptic_rescale_factor * 0 / PD_factor
+    g_TCR_TRN = synaptic_rescale_factor * 5e2 / PD_factor
 
     # Couplings to TCR neurons
-    g_S_Layer_TCR = synaptic_rescale_factor * 0/PD_factor
-    g_M_Layer_TCR = synaptic_rescale_factor * 0/PD_factor
-    g_D_Layer_TCR = synaptic_rescale_factor * 1e2/PD_factor
-    g_CI_TCR = synaptic_rescale_factor * 0/PD_factor
-    g_TRN_TCR = synaptic_rescale_factor * 2.5e3/PD_factor
+    g_S_Layer_TCR = synaptic_rescale_factor * 0 / PD_factor
+    g_M_Layer_TCR = synaptic_rescale_factor * 0 / PD_factor
+    g_D_Layer_TCR = synaptic_rescale_factor * 1e2 / PD_factor
+    g_CI_TCR = synaptic_rescale_factor * 0 / PD_factor
+    g_TRN_TCR = synaptic_rescale_factor * 2.5e3 / PD_factor
 
     # Synaptic Delays
     t_d_l = 8		# Time delay between the layers in cortex and nuclei in thalamus (ms)
