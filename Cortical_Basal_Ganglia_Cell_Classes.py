@@ -92,8 +92,14 @@ class Izhikevich(object):
     def __init__(self, **parameters):
         
         # Create single compartment cell section, i.e. soma section
-        self.soma = Section(L=parameters['L'], diam=parameters['diam'], nseg=parameters['nseg'], Ra=parameters['Ra'], cm=parameters['cm'],
-                            mechanisms=[])
+        self.soma = Section(
+            L=parameters['L'],
+            diam=parameters['diam'],
+            nseg=parameters['nseg'],
+            Ra=parameters['Ra'],
+            cm=parameters['cm'],
+            mechanisms=[]
+            )
         
         # Insert the Izhikevich mechanism
         self.izh = h.Izh(0.5, sec=self.soma)
@@ -107,20 +113,18 @@ class Izhikevich(object):
         
         
         # Add threshold noise to the neuron
-        r = h.Random()
-        r.Random123(GV.stream_index * GV.random_stream_offset + 1, 1, 0)
-        GV.thresh_rslist.append(r)
-        #GV.thresh_rslist[-1].r.normal(parameters['thresh'], parameters['thresh_noise']) 	# mean 30.0, variance 0.5
-        GV.thresh_rslist[-1].normal(parameters['thresh'], parameters['thresh_noise']) 	# mean 30.0, variance 0.5
-        #GV.thresh_rslist[-1].r.play(self.izh._ref_thresh)
-        GV.thresh_rslist[-1].play(self.izh._ref_thresh)
+        # r = h.Random()
+        # r.Random123(GV.stream_index * GV.random_stream_offset + 1, 1, 0)
+        # GV.thresh_rslist.append(r)
+        # GV.thresh_rslist[-1].normal(parameters['thresh'], parameters['thresh_noise']) 	# mean 30.0, variance 0.5
+        # GV.thresh_rslist[-1].play(self.izh._ref_thresh)
         
         
         # Generate Membrane noise (and the required independent random stream)
         # Append random stream for gaussian membrane noise mechanism to global list
         GV.rslist.append(h.RandomStream(GV.stream_index, 0, 0, GV.random_stream_offset))
         GV.stream_index = GV.stream_index + 1				# Need to increment the global stream index variable
-        GV.rslist[-1].r.normal(0,1) 						# mean 0, variance 1
+        GV.rslist[-1].r.normal(0, 1) 						# mean 0, variance 1
         GV.rslist[-1].start()
         
         # Define conversion factor so membrane noise is scaled correctly for the section
