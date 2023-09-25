@@ -4,6 +4,18 @@ The original paper: _Cortical network effects of subthalamic deep brain stimulat
 
 The original translation by John Fleming, editor: AmirAli Farokhniaee.
 
+# Quickstart guide
+To run the model use
+```
+python TCM_Build_Run.py
+```
+The simulation results will be saved to an output directory, the name of the output directory will be printed to the standard output.
+
+To plot the results use
+```
+python plot_simulation_results.py result_dir
+```
+
 # Changelog
 ## Edition 3, 25/09/2023
   - Removed spiking threshold variability from the neuronal populations (h.Random() was causing the code to not terminate)
