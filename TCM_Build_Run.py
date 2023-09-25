@@ -1,42 +1,36 @@
 """ -*- coding: utf-8 -*-
 
-Description: The thalamo-cortical microcircuit (TCM) spiking neural netwrok model developed by AmirAli Farokhniaee in Matlab, trnaslated to PyNN by John Flemming.
+Description: The thalamo-cortical microcircuit (TCM) spiking neural network model developed by AmirAli Farokhniaee in Matlab, trnaslated to PyNN by John Fleming.
              The original paper: Cortical network effects of subthalamic deep brain stimulationin a thalamo-cortical microcircuit model
                                  by AmirAli Farokhniaee Ph.D. and Madeleine Lowery Ph.D. 2021 Journal of Neural Engineering 
                                  J. Neural Eng.18(2021) 056006 https://doi.org/10.1088/1741-2552/abee50
-             The original translatoin by John Fleming, eidtor: AmirAli Farokhniaee.
+             The original translation by John Fleming, editor: AmirAli Farokhniaee.
 
 # Edition 1, 28/03/2023
 # Edition 2, 19/04/2023 - Upscaling of populations (5e2 and 1e3 order of magnitude) is ensured to work well. Above threshold bias currents are used for numerical stability.
 						  non-PD (normal) couplings are introduced as well as PD couplings that was already in use
 """
 
+import datetime
 import neuron
 h = neuron.h
 
 
 from math import pi
-from pyNN.neuron import setup, run, Population, Projection, ArrayConnector, OneToOneConnector, AllToAllConnector, TsodyksMarkramSynapse, DCSource, NoisyCurrentSource, initialize, SpikeSourcePoisson, StaticSynapse, FixedProbabilityConnector, reset
+from pyNN.neuron import setup, run, Population, Projection, ArrayConnector, OneToOneConnector, AllToAllConnector, TsodyksMarkramSynapse, DCSource, NoisyCurrentSource, initialize, SpikeSourcePoisson, StaticSynapse, FixedProbabilityConnector, reset, end
 from pyNN.random import RandomDistribution, NumpyRNG
 from pyNN import space
 from Cortical_Basal_Ganglia_Cell_Classes import Izhikevich_Type
 import numpy as np
-#import math
-#import scipy.signal as signal
-#import os
 import sys
-from timeit import default_timer as timer
-#import time
-#import matplotlib.pyplot as plt
-#from neo.io import NixIO
-#from pyNN.utility.plotting import Figure, Panel
+from time import perf_counter
+from pathlib import Path
 
 # Import global variables for generating the streams for the membrane noise
 import Global_Variables as GV
 
 # Load ranstream hoc template for generating random streams
 h.load_file("ranstream.hoc")
-
 
 """	Tsodyks-Markram Synapse Parameters - Taken from AmirAli's Matlab model: see the supplementary material!
 ------------------------------------------------------------------------------------------------------
@@ -99,9 +93,31 @@ PD;
 ----------------------------------------------------------------------------------------------------------
 """
 
-if __name__ == '__main__':
+def randomise_c_d_values(population, neuron_num):
+    r = np.random.uniform(0, 1, neuron_num)
+    c_value = population.get('c')
+    updated_c_values = c_value + 15 * (r ** 2)
+    population.set(c = updated_c_values)
     
-    start = timer()
+    d_value = population.get('d')
+    updated_d_values = d_value - 0.6 * (r ** 2)
+    population.set(d = updated_d_values)
+
+def randomise_a_b_values(population, neuron_num):
+    # Add variability to a values
+    r = np.random.uniform(0, 1, neuron_num)
+    a_value = population.get('a_')
+    updated_a_values = a_value + 0.008 * r
+    population.set(a_ = updated_a_values)
+
+    # Add variability to b values
+    b_value = population.get('b')
+    updated_b_values = b_value - 0.005 * r
+    population.set(b = updated_b_values)
+
+if __name__ == "__main__":
+    
+    start_time = perf_counter()
     #initialize simulation
     simulation_timestep = 0.1
     setup(timestep=simulation_timestep, rngseed=3695456) 
@@ -109,10 +125,10 @@ if __name__ == '__main__':
     pop_size = 100
     PD_factor = 800
 
-    print("\nSetting simulation time to",simulation_time/1000,"(s) with time step =",simulation_timestep,"(ms)")
+    print(f"\nSetting simulation time to {simulation_time / 1000} s with time step = {simulation_timestep} ms")
 
     # Set the global offset variable for the random streams
-    GV.random_stream_offset = int(simulation_time * (1.0/simulation_timestep))
+    GV.random_stream_offset = int(simulation_time * (1.0 / simulation_timestep))
 
 
     # Use CVode to calculate i_membrane_ for fast LFP calculation
@@ -125,10 +141,9 @@ if __name__ == '__main__':
 
     # Population Size
     #pop_size = 100
-    print("\nNeuronal population size, order of magnitude", pop_size)
+    print("\nNeuronal population size", pop_size)
 
     # Variation of TRN noise
-    #noise_rescale_factor = float(sys.argv[2])
     noise_rescale_factor = 1
 
 
@@ -146,36 +161,18 @@ if __name__ == '__main__':
     ###--------------------------------------------------- S Layer ----------------------------------------------------### 
     # S layer - Regular Spiking Neurons:
     S_layer_RS_neuron_num = round(0.5 * pop_size)
-    S_layer_RS_Population = Population(S_layer_RS_neuron_num, Izhikevich_Type(**RS_parameters))
+    S_layer_RS_Population = Population(S_layer_RS_neuron_num, Izhikevich_Type(**RS_parameters), label="S_layer_RS")
 
     # Set the seed for the random object for parameter variation
     np.random.seed(3695) # when we set the seed, the random number generation will be deterministic
 
-    # Add variability to c values
-    r = np.random.uniform(0, 1, S_layer_RS_neuron_num)
-    c_value = S_layer_RS_Population.get('c')
-    updated_c_values = c_value + 15 * (r ** 2)
-    S_layer_RS_Population.set(c = updated_c_values)
-
-    # Add variability to d values
-    d_value = S_layer_RS_Population.get('d')
-    updated_d_values = d_value - 0.6 * (r ** 2)
-    S_layer_RS_Population.set(d = updated_d_values)
+    randomise_c_d_values(S_layer_RS_Population, S_layer_RS_neuron_num)
 
     # S layer - Intermittent Bursting Neurons
     S_layer_IB_neuron_num = pop_size - S_layer_RS_neuron_num
-    S_layer_IB_Population = Population(S_layer_IB_neuron_num, Izhikevich_Type(**IB_parameters))
+    S_layer_IB_Population = Population(S_layer_IB_neuron_num, Izhikevich_Type(**IB_parameters), label="S_layer_IB")
 
-    # Add variability to c values
-    r = np.random.uniform(0, 1, S_layer_IB_neuron_num)
-    c_value = S_layer_IB_Population.get('c')
-    updated_c_values = c_value + 15 * (r ** 2)
-    S_layer_IB_Population.set(c = updated_c_values)
-
-    # Add variability to d values
-    d_value = S_layer_IB_Population.get('d')
-    updated_d_values = d_value - 0.6 * (r ** 2)
-    S_layer_IB_Population.set(d = updated_d_values)
+    randomise_c_d_values(S_layer_IB_Population, S_layer_IB_neuron_num)
 
     # Make assembly for the S layer - Contains RS and IB neurons
     S_layer_neurons = S_layer_RS_Population + S_layer_IB_Population
@@ -183,18 +180,9 @@ if __name__ == '__main__':
     ###--------------------------------------------------- M Layer ----------------------------------------------------### 
     # M layer - Regular Spiking Neurons:
     M_layer_RS_neuron_num = pop_size
-    M_layer_RS_Population = Population(M_layer_RS_neuron_num, Izhikevich_Type(**RS_parameters))
+    M_layer_RS_Population = Population(M_layer_RS_neuron_num, Izhikevich_Type(**RS_parameters), label="M_layer_RS")
 
-    # Add variability to c values
-    r = np.random.uniform(0, 1, M_layer_RS_neuron_num)
-    c_value = M_layer_RS_Population.get('c')
-    updated_c_values = c_value + 15 * (r ** 2)
-    M_layer_RS_Population.set(c = updated_c_values)
-
-    # Add variability to d values
-    d_value = M_layer_RS_Population.get('d')
-    updated_d_values = d_value - 0.6 * (r ** 2)
-    M_layer_RS_Population.set(d = updated_d_values)
+    randomise_c_d_values(M_layer_RS_Population, M_layer_RS_neuron_num)
 
     # Make assembly for the M layer - Contains only RS neurons
     M_layer_neurons = M_layer_RS_Population
@@ -204,31 +192,13 @@ if __name__ == '__main__':
     D_layer_RS_neuron_num = round(0.7 * pop_size)
     D_layer_RS_Population = Population(D_layer_RS_neuron_num, Izhikevich_Type(**RS_parameters), label="D_layer_RS")
 
-    # Add variability to c values
-    r = np.random.uniform(0, 1, D_layer_RS_neuron_num)
-    c_value = D_layer_RS_Population.get('c')
-    updated_c_values = c_value + 15 * (r ** 2)
-    D_layer_RS_Population.set(c = updated_c_values)
-
-    # Add variability to d values
-    d_value = D_layer_RS_Population.get('d')
-    updated_d_values = d_value - 0.6 * (r ** 2)
-    D_layer_RS_Population.set(d = updated_d_values)
+    randomise_c_d_values(D_layer_RS_Population, D_layer_RS_neuron_num)
 
     # D layer - Intermittent Bursting Neurons
     D_layer_IB_neuron_num = pop_size - D_layer_RS_neuron_num
     D_layer_IB_Population = Population(D_layer_IB_neuron_num, Izhikevich_Type(**IB_parameters), label="D_Layer_IB")
 
-    # Add variability to c values
-    r = np.random.uniform(0, 1, D_layer_IB_neuron_num)
-    c_value = D_layer_IB_Population.get('c')
-    updated_c_values = c_value + 15 * (r ** 2)
-    D_layer_IB_Population.set(c = updated_c_values)
-
-    # Add variability to d values
-    d_value = D_layer_IB_Population.get('d')
-    updated_d_values = d_value - 0.6 * (r ** 2)
-    D_layer_IB_Population.set(d = updated_d_values)
+    randomise_c_d_values(D_layer_IB_Population, D_layer_IB_neuron_num)
 
     # Make assembly for the D layer - Contains RS and IB neurons
     D_layer_neurons = D_layer_RS_Population + D_layer_IB_Population
@@ -236,69 +206,33 @@ if __name__ == '__main__':
     ###--------------------------------------------------- Cortical Interneurons ----------------------------------------------------### 
     # Cortical Interneurons (CI) - Fast Spiking Interneurons:
     CI_FS_neuron_num = round(0.5 * pop_size)
-    CI_FS_Population = Population(CI_FS_neuron_num, Izhikevich_Type(**FS_parameters))
+    CI_FS_Population = Population(CI_FS_neuron_num, Izhikevich_Type(**FS_parameters), label="CI_FS")
 
-    # Add variability to a values
-    r = np.random.uniform(0, 1, CI_FS_neuron_num)
-    a_value = CI_FS_Population.get('a_')
-    updated_a_values = a_value + 0.008 * r
-    CI_FS_Population.set(a_ = updated_a_values)
-
-    # Add variability to b values
-    b_value = CI_FS_Population.get('b')
-    updated_b_values = b_value - 0.005 * r
-    CI_FS_Population.set(b = updated_b_values)
+    randomise_a_b_values(CI_FS_Population, CI_FS_neuron_num)
 
     # Cortical Interneurons (CI) - Low-Threshold Spiking Interneurons:
     CI_LTS_neuron_num = pop_size - CI_FS_neuron_num
-    CI_LTS_Population = Population(CI_LTS_neuron_num, Izhikevich_Type(**LTS_parameters))
+    CI_LTS_Population = Population(CI_LTS_neuron_num, Izhikevich_Type(**LTS_parameters), label="CI_LTS")
 
-    # Add variability to a values
-    r = np.random.uniform(0, 1, CI_LTS_neuron_num)
-    a_value = CI_LTS_Population.get('a_')
-    updated_a_values = a_value + 0.008 * r
-    CI_LTS_Population.set(a_ = updated_a_values)
-
-    # Add variability to b values
-    b_value = CI_LTS_Population.get('b')
-    updated_b_values = b_value - 0.005 * r
-    CI_LTS_Population.set(b = updated_b_values)
+    randomise_a_b_values(CI_LTS_Population, CI_LTS_neuron_num)
 
     # Make assembly for the cortical interneurons - Contains both Fast Spiking and Low-Threshold Spiking Interneurons
     CI_neurons = CI_FS_Population + CI_LTS_Population
 
     ###--------------------------------------------------- Thalamic Reticular Nucleus (TRN) ----------------------------------------------------### 
     TRN_TR_neuron_num = round(0.4 * pop_size)
-    TRN_TR_Population = Population(TRN_TR_neuron_num, Izhikevich_Type(**Ret_parameters))
+    TRN_TR_Population = Population(TRN_TR_neuron_num, Izhikevich_Type(**Ret_parameters), label="Th_Reticular")
 
-    # Add variability to a values
-    r = np.random.uniform(0, 1, TRN_TR_neuron_num)
-    a_value = TRN_TR_Population.get('a_')
-    updated_a_values = a_value + 0.008 * r
-    TRN_TR_Population.set(a_ = updated_a_values)
-
-    # Add variability to b values
-    b_value = TRN_TR_Population.get('b')
-    updated_b_values = b_value - 0.005 * r
-    TRN_TR_Population.set(b = updated_b_values)	
+    randomise_a_b_values(TRN_TR_Population, TRN_TR_neuron_num)
 
     # Make assembly for Thalamic Reticular Nucleus
     TRN_TR_neurons = TRN_TR_Population
 
     ###--------------------------------------------------- Thalamo-Cortical Relay Nucleus (TCR) ----------------------------------------------------### 
     TCR_TC_neuron_num = pop_size
-    TCR_TC_Population = Population(TCR_TC_neuron_num, Izhikevich_Type(**Rel_TC_parameters))
+    TCR_TC_Population = Population(TCR_TC_neuron_num, Izhikevich_Type(**Rel_TC_parameters), label="Th_Relay")
 
-    # Add variability to a values
-    r = np.random.uniform(0, 1, TCR_TC_neuron_num)
-    a_value = TCR_TC_Population.get('a_')
-    updated_a_values = a_value + 0.008 * r
-    TCR_TC_Population.set(a_ = updated_a_values)
-
-    # Add variability to b values
-    b_value = TCR_TC_Population.get('b')
-    updated_b_values = b_value - 0.005 * r
-    TCR_TC_Population.set(b = updated_b_values)
+    randomise_a_b_values(TCR_TC_Population, TCR_TC_neuron_num)
 
     # Make assembly for Thalamo-Cortical Relay Nucleus
     TCR_TC_neurons = TCR_TC_Population
@@ -311,7 +245,7 @@ if __name__ == '__main__':
     print("\nSetting up connections:")
     # Generate random numbers from gaussian distribution for setting up synaptic weights as in Matlab model
     rng = NumpyRNG(seed=8658764) 
-    weight_uniform_dist = RandomDistribution('uniform', [0, 1],rng=rng)
+    weight_uniform_dist = RandomDistribution('uniform', [0, 1], rng=rng)
 
     r_s = weight_uniform_dist.next(S_layer_neurons.size)
     r_m = weight_uniform_dist.next(M_layer_neurons.size)
@@ -325,12 +259,12 @@ if __name__ == '__main__':
     print("Defining coupling distribution; all to all uniformly distributed random coupling.\nSetting up the type of synapses and their distributions within and between each layer and nuclei...")
 
     # Define the adjacency matrices for each population (each connection is rescaled by max value below in projection definitions)
-    r_s = r_s/S_layer_neurons.size #FK ? 
-    r_m = r_m/M_layer_neurons.size
-    r_d = r_d/D_layer_neurons.size
-    r_ins = r_ins/CI_neurons.size
-    r_ret = r_ret/TRN_TR_neurons.size
-    r_rel = r_rel/TCR_TC_neurons.size
+    r_s = r_s / S_layer_neurons.size #FK ? 
+    r_m = r_m / M_layer_neurons.size
+    r_d = r_d / D_layer_neurons.size
+    r_ins = r_ins / CI_neurons.size
+    r_ret = r_ret / TRN_TR_neurons.size
+    r_rel = r_rel / TCR_TC_neurons.size
 
     # TM Synapse Parameters:
     # Percentage of synaptic weight values which correspond to each TM synapse type (Facilitating, Depressing and Pseudolinear)
@@ -364,10 +298,10 @@ if __name__ == '__main__':
     tau_facil_ip = 62
 
     #The synaptic ratios that will be multiplied in the adjacancy matrix calculated based on F synapses:
-    Exc_syn_ratio_D = Exc_Dep_weight/Exc_Fac_weight
-    Exc_syn_ratio_P = Exc_Pseudo_weight/Exc_Fac_weight
-    Inh_syn_ratio_D = Inh_Dep_weight/Inh_Fac_weight
-    Inh_syn_ratio_P = Inh_Pseudo_weight/Inh_Fac_weight
+    Exc_syn_ratio_D = Exc_Dep_weight / Exc_Fac_weight
+    Exc_syn_ratio_P = Exc_Pseudo_weight / Exc_Fac_weight
+    Inh_syn_ratio_D = Inh_Dep_weight / Inh_Fac_weight
+    Inh_syn_ratio_P = Inh_Pseudo_weight / Inh_Fac_weight
 
     """ ---------------------------------------------Synaptic weight values: ---------------------------------------------"""
     #PD_factor = 2.5							# Scaling factor for simulating normal conditions
@@ -417,7 +351,7 @@ if __name__ == '__main__':
     g_M_Layer_D_Layer = synaptic_rescale_factor * 0 / PD_factor
     g_CI_D_Layer = synaptic_rescale_factor * 5e3 / PD_factor
     g_TRN_D_Layer = synaptic_rescale_factor * 0 / PD_factor
-    g_TCR_D_Layer = 1.0 * synaptic_rescale_factor * 1e3 / PD_factor
+    g_TCR_D_Layer = synaptic_rescale_factor * 1e3 / PD_factor
 
     # Couplings to CI neurons
     g_S_Layer_CI = synaptic_rescale_factor * 2e2 / PD_factor
@@ -866,11 +800,9 @@ if __name__ == '__main__':
                                                 connector=AllToAllConnector(allow_self_connections=True),
                                                 synapse_type=TsodyksMarkramSynapse(U=Uip, tau_rec=tau_rec_ip, tau_facil=tau_facil_ip,weight=Inh_Pseudo_weight*g_TRN_TCR*r_rel*connectivity_structure[0:TRN_TR_neurons.size,:], delay=t_d_l+t_d_syn),
                                                 receptor_type='isyn')
-    #end = timer()
-    #print('Done with building the network! \nElapsed time:', end-start, 'seconds.')
 
-    end =timer()
-    print('Done with building the TCM network! \nElapsed time:', end-start, 'seconds.')
+    end_time = perf_counter()
+    print(f"Done with building the TCM network! \nElapsed time: {end_time - start_time} seconds.")
     
 
     ###--------------------------------------------------- Recording ----------------------------------------------------### 
@@ -887,26 +819,36 @@ if __name__ == '__main__':
 
     # Simulate the model for 
     print("\nRunning the isolated thalamo-cortical microcircuit simulation ...")
-    start=timer()
+    start_time = perf_counter()
     run(simulation_time)
-    end = timer()	
+    end_time = perf_counter()	
 
-    print("\n Simulation Done!\n Total elapsed time:", end-start, "seconds.\n")
-
-    #================= this reset the network time for further simulations, no netwrok structure and recording will be changed =======
-    # KO: Not really needed and it fails with newer versions of numpy
-    # reset()
+    print(f"\n Simulation Done!\n Total elapsed time: {end_time - start_time} seconds.\n")
 
 
     # Save simulation results for postprecessing:
     print("Write the model outputs to .mat files for postprocessing...\n")
-
+    current_datetime = datetime.datetime.now()
+    id_number = 0
+    protect_overwrite = True
+    
+    while protect_overwrite:
+        datetime_string = f"{current_datetime.year:04}{current_datetime.month:02}{current_datetime.day:02}_{current_datetime.hour:02}{current_datetime.minute:02}{current_datetime.second:02}_{id_number:02}"
+        output_dir = Path("Results") / datetime_string
+        if output_dir.exists():
+            id_number += 1
+        else:
+            protect_overwrite = False
+    print(f"Output directory: {output_dir.name}")
+    
     # Write the specified  recorded variables to .mat files (membrane voltages, postsynaptic currents and spike times):
-    S_layer_neurons.write_data("Results/S_Layer.mat")
-    M_layer_neurons.write_data("Results/M_Layer.mat")
-    D_layer_neurons.write_data("Results/D_Layer.mat")
-    CI_neurons.write_data("Results/CI_Neurons.mat")
-    TCR_TC_neurons.write_data("Results/TCR_Nucleus.mat")
-    TRN_TR_neurons.write_data("Results/TR_Nucleus.mat")
+    
+    S_layer_neurons.write_data(str(output_dir / "S_Layer.mat"))
+    M_layer_neurons.write_data(str(output_dir / "M_Layer.mat"))
+    D_layer_neurons.write_data(str(output_dir / "D_Layer.mat"))
+    CI_neurons.write_data(str(output_dir / "CI_Neurons.mat"))
+    TCR_TC_neurons.write_data(str(output_dir / "TCR_Nucleus.mat"))
+    TRN_TR_neurons.write_data(str(output_dir / "TR_Nucleus.mat"))
 
     print("Done!")
+    end()
