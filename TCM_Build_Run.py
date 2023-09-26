@@ -9,6 +9,7 @@ import numpy as np
 from time import perf_counter
 from pathlib import Path
 import yaml
+import model_values
 
 # Import global variables for generating the streams for the membrane noise
 import Global_Variables as GV
@@ -16,67 +17,6 @@ import Global_Variables as GV
 # Load ranstream hoc template for generating random streams
 h = neuron.h
 h.load_file("ranstream.hoc")
-
-"""	Tsodyks-Markram Synapse Parameters - Taken from AmirAli's Matlab model: see the supplementary material!
-------------------------------------------------------------------------------------------------------
-        Synapse Type			|  U	| tau_rec	|	tau_facil	|	 A	    |	tau_s 	|  delay | 	
-------------------------------------------------------------------------------------------------------
-        Excitatory Facilitating		| 0.09	|  	138	    |  	   670		|   0.2  	|	 3  	|	 1	 |	
-------------------------------------------------------------------------------------------------------
-        Excitatory Depressing		| 0.5	|  	671    |  	   17		|   0.63  	|	 3	    |	 1	 |
-------------------------------------------------------------------------------------------------------
-        Excitatory Pseudolinear		| 0.29	|  	329    |  	   326		|   0.17  	|	 3	    |	 1	 |	
-------------------------------------------------------------------------------------------------------
-        Inhibitory Facilitating		| 0.016 |  	45	    |  	   376		|   0.08  	|	 11     |    1   |
-------------------------------------------------------------------------------------------------------
-        Inhibitory Depressing		| 0.25	|  	706	    |  	   21		|   0.75  	|	 11	    |	 1	 |	
-------------------------------------------------------------------------------------------------------
-        Inhibitory Pseudolinear		| 0.32	|  	144    |  	   62		|   0.17 	|	 11 	|	 1	 |			
-------------------------------------------------------------------------------------------------------
-"""
-""" Neuron Parameters - Taken from AmirAli's Matlab model for subthreshold regime of TCM: see the supplementary material!
----------------------------------------------------------------------------------------------------------
-        Neuron Type					|	a	|	b	|	c	|	d	|	v_thresh 	|	Bias current	|  	
----------------------------------------------------------------------------------------------------------
-        Regular Spiking (RS)			| 0.02	|  0.2	| -65.0	|  8.0	|	 30.0  		|	 	3.5697 		|	
----------------------------------------------------------------------------------------------------------
-        Intrinsically Bursting (IB)		| 0.02	|  	0.2	| -55.0 |  4.0	|	 30.0	    |	 	3.6689	 	| 
-----------------------------------------------------------------------------------------------------------
-        Fast Spiking (FS)				| 0.1	|  0.2  | -65.0	|  2.0  |	 30.0	    |	 	3.8672	 	|	
-----------------------------------------------------------------------------------------------------------
-        Low Threshold Spiking (LTS)		| 0.02 	|  0.25 | -65.0	|  2.0  |	 30.0     	|    	0.4958   	|
-----------------------------------------------------------------------------------------------------------
-        Thalamocortical Relay (TC)		| 0.02	|  0.25 | -65.0	|  0.05 |	 30.0	    |	 	0.6941	 	|	
-----------------------------------------------------------------------------------------------------------
-        Thalamic Reticular (TR)			| 0.02	|  0.25 | -65.0 |  2.05 |	 30.0 	    |	 	0.6941	 	|			
-----------------------------------------------------------------------------------------------------------	
-"""
-"""Maximum coupling weights from row to columns of TCM substructures
-- Two sets of weights are given for noraml and PD conditions; see the last supplementary figure! 
-----------------------------------------------------------------------------------------------------------
-NORMAL;
--------
-        |	S	|	M	|	D	|	CI	|	TCR	|	TRN	
-        ------------------------------------------------
-        S	|  -10	|  	300	|	300	|  200	|	0	|	0	
-        M	|   10	|  -10	|	0	|  200	|	0	|	0
-        D	|  500	|	0	|  -10	|  200	|  700	|  700
-        CI	| -500	|  -300	| -7500	| -500	|	0	|   0
-        TCR	|	0	|	0	|	10	|  10	|	0	|  1000
-        TRN	|	0	|	0	|	0	|	0	| -500	|  -50
-
-PD;
-----
-        |	S	|	M	|	D	|	CI	|	TCR	|	TRN	
-        ------------------------------------------------
-        S	|  -50	|   10	|  300	|  200	|	0	|	0
-        M	|  300	|  -50	|	0	|  200	|	0	|	0
-        D	|  500	|	0	|  -50	|  200	|  100	|  100
-        CI	| -750	| -750	| -5000	|  -50	|	0	|	0
-        TCR	|	0	|	0	|  1000	|  1000	|	0	|  500
-        TRN	|	0	|	0	|	0	|	0	| -2500	|  -50
-----------------------------------------------------------------------------------------------------------
-"""
 
 
 def randomise_c_d_values(population):
@@ -132,20 +72,20 @@ if __name__ == "__main__":
     cvode.active(0)
 
     # Create random distribution for initial cell membrane voltages
-    v_init = RandomDistribution('uniform',(-70.0, -60.0))
-    parameter_variability = RandomDistribution('uniform',(0, 1))
+    v_init = RandomDistribution('uniform', (-70.0, -60.0))
+    parameter_variability = RandomDistribution('uniform', (0, 1))
 
     # Population Size
     # pop_size = 100
     print("\nNeuronal population size", pop_size)
 
     # Neuron (and Exponential Synapse) Parameters - Taken from AmirAli's Matlab model: see the supplementary material!
-    RS_parameters = {'a_': 0.02, 'b': 0.2,  'c': -65.0, 'd': 8.0,  'thresh': 30.0, 'thresh_noise': 0.5, 'bias_current_amp': 4, 'noise_mean': 0, 'noise_stdev': 1.5, 'e_rev_e': 0.0, 'tau_e': 3.0, 'e_rev_i': -70.0, 'tau_i': 11.0}
-    IB_parameters = {'a_': 0.02, 'b': 0.2,  'c': -55.0, 'd': 4.0,  'thresh': 30.0, 'thresh_noise': 0.5, 'bias_current_amp': 4, 'noise_mean': 0, 'noise_stdev': 1.5, 'e_rev_e': 0.0, 'tau_e': 3.0, 'e_rev_i': -70.0, 'tau_i': 11.0}
-    FS_parameters = {'a_': 0.1,  'b': 0.2,  'c': -65.0, 'd': 2.0,  'thresh': 30.0, 'thresh_noise': 0.5, 'bias_current_amp': 4, 'noise_mean': 0, 'noise_stdev': 1.5, 'e_rev_e': 0.0, 'tau_e': 3.0, 'e_rev_i': -70.0, 'tau_i': 11.0}
-    LTS_parameters = {'a_': 0.02, 'b': 0.25, 'c': -65.0, 'd': 2.0,  'thresh': 30.0, 'thresh_noise': 0.5, 'bias_current_amp': 1, 'noise_mean': 0, 'noise_stdev': 1.5, 'e_rev_e': 0.0, 'tau_e': 3.0, 'e_rev_i': -70.0, 'tau_i': 11.0}
-    Rel_TC_parameters = {'a_': 0.02, 'b': 0.25, 'c': -65.0, 'd': 0.05, 'thresh': 30.0, 'thresh_noise': 0.5, 'bias_current_amp': 1, 'noise_mean': 0, 'noise_stdev': 1.5, 'e_rev_e': 0.0, 'tau_e': 3.0, 'e_rev_i': -70.0, 'tau_i': 11.0}
-    Ret_parameters = {'a_': 0.02, 'b': 0.25, 'c': -65.0, 'd': 2.05, 'thresh': 30.0, 'thresh_noise': 0.5, 'bias_current_amp': 1, 'noise_mean': 0, 'noise_stdev': 1.5, 'e_rev_e': 0.0, 'tau_e': 3.0, 'e_rev_i': -70.0, 'tau_i': 11.0}
+    RS_parameters = model_values.RS_parameters
+    IB_parameters = model_values.IB_parameters
+    FS_parameters = model_values.FS_parameters
+    LTS_parameters = model_values.LTS_parameters
+    Rel_TC_parameters = model_values.Rel_TC_parameters
+    Ret_parameters = model_values.Ret_parameters
 
     # ----------------------------------------- Neuron Populations --------------------------------------------------- #
     print("\nAssembling neuronal populations within cortical layers and thalamic nuclei...")
@@ -307,106 +247,58 @@ if __name__ == "__main__":
     cell_cm = 1.0
     synaptic_rescale_factor = pi * cell_diam * cell_L * cell_cm * 1e-5 / PD_factor
 
-    max_g_inter = {}
-    max_g_inter["S"] = {
-        "S": 5e1,
-        "M": 3e2,
-        "D": 5e2,
-        "CI": 7.5e2,
-        "TRN": 0,
-        "TCR": 0
-    }
-    max_g_inter["M"] = {
-        "S": 1e1,
-        "M": 5e1,
-        "D": 0,
-        "CI": 7.5e2,
-        "TRN": 0,
-        "TCR": 0 
-    }
-    max_g_inter["D"] = {
-        "S": 3e2,
-        "M": 0,
-        "D": 5e1,
-        "CI": 5e3,
-        "TRN": 0,
-        "TCR": 1e3 
-    }
-    max_g_inter["CI"] = {
-        "S": 2e2,
-        "M": 2e2,
-        "D": 2e2,
-        "CI": 5e1,
-        "TRN": 0,
-        "TCR": 1e3
-    }
-    max_g_inter["TRN"] = {
-        "S": 0,
-        "M": 0,
-        "D": 1e2,
-        "CI": 0,
-        "TRN": 5e1,
-        "TCR": 5e2
-    }
-    max_g_inter["TCR"] = {
-        "S": 0,
-        "M": 0,
-        "D": 1e2,
-        "CI": 0,
-        "TRN": 2.5e3,
-        "TCR": 0
-    }
+    max_g = model_values.max_g_pd
 
     # Max Coupling Strengths within each structure
-    g_S_Layer_S_Layer = synaptic_rescale_factor * max_g_inter["S"]["S"]
-    g_M_Layer_M_Layer = synaptic_rescale_factor * max_g_inter["M"]["M"]
-    g_D_Layer_D_Layer = synaptic_rescale_factor * max_g_inter["D"]["D"]
-    g_CI_CI = synaptic_rescale_factor * max_g_inter["CI"]["CI"]
-    g_TRN_TRN = synaptic_rescale_factor * max_g_inter["TRN"]["TRN"]
-    g_TCR_TCR = synaptic_rescale_factor * max_g_inter["TCR"]["TCR"]
+    g_S_Layer_S_Layer = synaptic_rescale_factor * max_g["S"]["S"]
+    g_M_Layer_M_Layer = synaptic_rescale_factor * max_g["M"]["M"]
+    g_D_Layer_D_Layer = synaptic_rescale_factor * max_g["D"]["D"]
+    g_CI_CI = synaptic_rescale_factor * max_g["CI"]["CI"]
+    g_TRN_TRN = synaptic_rescale_factor * max_g["TRN"]["TRN"]
+    g_TCR_TCR = synaptic_rescale_factor * max_g["TCR"]["TCR"]
 
     # Max Coupling Strengths between structures
     # Couplings to S Layer
-    g_M_Layer_S_Layer = synaptic_rescale_factor * max_g_inter["S"]["M"]
-    g_D_Layer_S_Layer = synaptic_rescale_factor * max_g_inter["S"]["D"]
-    g_CI_S_Layer = synaptic_rescale_factor * max_g_inter["S"]["CI"]
-    g_TRN_S_Layer = synaptic_rescale_factor * max_g_inter["S"]["TRN"]
-    g_TCR_S_Layer = synaptic_rescale_factor * max_g_inter["S"]["TCR"]
+    g_M_Layer_S_Layer = synaptic_rescale_factor * max_g["S"]["M"]
+    g_D_Layer_S_Layer = synaptic_rescale_factor * max_g["S"]["D"]
+    g_CI_S_Layer = synaptic_rescale_factor * max_g["S"]["CI"]
+    g_TRN_S_Layer = synaptic_rescale_factor * max_g["S"]["TRN"]
+    g_TCR_S_Layer = synaptic_rescale_factor * max_g["S"]["TCR"]
 
     # Couplings to M Layer
-    g_S_Layer_M_Layer = synaptic_rescale_factor * max_g_inter["M"]["S"]
-    g_D_Layer_M_Layer = synaptic_rescale_factor * max_g_inter["M"]["D"]
-    g_CI_M_Layer = synaptic_rescale_factor * max_g_inter["M"]["CI"]
-    g_TRN_M_Layer = synaptic_rescale_factor * max_g_inter["M"]["TRN"]
-    g_TCR_M_Layer = synaptic_rescale_factor * max_g_inter["M"]["TCR"]
+    g_S_Layer_M_Layer = synaptic_rescale_factor * max_g["M"]["S"]
+    g_D_Layer_M_Layer = synaptic_rescale_factor * max_g["M"]["D"]
+    g_CI_M_Layer = synaptic_rescale_factor * max_g["M"]["CI"]
+    g_TRN_M_Layer = synaptic_rescale_factor * max_g["M"]["TRN"]
+    g_TCR_M_Layer = synaptic_rescale_factor * max_g["M"]["TCR"]
 
     # Couplings to D Layer
-    g_S_Layer_D_Layer = synaptic_rescale_factor * max_g_inter["D"]["S"]
-    g_M_Layer_D_Layer = synaptic_rescale_factor * max_g_inter["D"]["M"]
-    g_CI_D_Layer = synaptic_rescale_factor * max_g_inter["D"]["CI"]
-    g_TRN_D_Layer = synaptic_rescale_factor * max_g_inter["D"]["TRN"]
-    g_TCR_D_Layer = synaptic_rescale_factor * max_g_inter["D"]["TCR"]
+    g_S_Layer_D_Layer = synaptic_rescale_factor * max_g["D"]["S"]
+    g_M_Layer_D_Layer = synaptic_rescale_factor * max_g["D"]["M"]
+    g_CI_D_Layer = synaptic_rescale_factor * max_g["D"]["CI"]
+    g_TRN_D_Layer = synaptic_rescale_factor * max_g["D"]["TRN"]
+    g_TCR_D_Layer = synaptic_rescale_factor * max_g["D"]["TCR"]
 
     # Couplings to CI neurons
-    g_S_Layer_CI = synaptic_rescale_factor * max_g_inter["CI"]["S"]
-    g_M_Layer_CI = synaptic_rescale_factor * max_g_inter["CI"]["M"]
-    g_D_Layer_CI = synaptic_rescale_factor * max_g_inter["CI"]["D"]
-    g_TRN_CI = synaptic_rescale_factor * max_g_inter["CI"]["TRN"]
-    g_TCR_CI = synaptic_rescale_factor * max_g_inter["CI"]["TCR"]
+    g_S_Layer_CI = synaptic_rescale_factor * max_g["CI"]["S"]
+    g_M_Layer_CI = synaptic_rescale_factor * max_g["CI"]["M"]
+    g_D_Layer_CI = synaptic_rescale_factor * max_g["CI"]["D"]
+    g_TRN_CI = synaptic_rescale_factor * max_g["CI"]["TRN"]
+    g_TCR_CI = synaptic_rescale_factor * max_g["CI"]["TCR"]
 
     # Couplings to TRN neurons
-    g_S_Layer_TRN = synaptic_rescale_factor * max_g_inter["TRN"]["S"]
-    g_M_Layer_TRN = synaptic_rescale_factor * max_g_inter["TRN"]["M"]
-    g_D_Layer_TRN = synaptic_rescale_factor * max_g_inter["TRN"]["D"]
-    g_CI_TRN = synaptic_rescale_factor * max_g_inter["TRN"]["CI"]
-    g_TCR_TRN = synaptic_rescale_factor * max_g_inter["TRN"]["TCR"]
+    g_S_Layer_TRN = synaptic_rescale_factor * max_g["TRN"]["S"]
+    g_M_Layer_TRN = synaptic_rescale_factor * max_g["TRN"]["M"]
+    g_D_Layer_TRN = synaptic_rescale_factor * max_g["TRN"]["D"]
+    g_CI_TRN = synaptic_rescale_factor * max_g["TRN"]["CI"]
+    g_TCR_TRN = synaptic_rescale_factor * max_g["TRN"]["TCR"]
 
     # Couplings to TCR neurons
-    g_S_Layer_TCR = synaptic_rescale_factor * max_g_inter["TCR"]["S"]
-    g_M_Layer_TCR = synaptic_rescale_factor * max_g_inter["TCR"]["M"]
-    g_D_Layer_TCR = synaptic_rescale_factor * max_g_inter["TCR"]["D"]
-    g_CI_TCR = synaptic_rescale_factor * max_g_inter["TCR"]["CI"]
-    g_TRN_TCR = synaptic_rescale_factor * max_g_inter["TCR"]["TRN"]
+    g_S_Layer_TCR = synaptic_rescale_factor * max_g["TCR"]["S"]
+    g_M_Layer_TCR = synaptic_rescale_factor * max_g["TCR"]["M"]
+    g_D_Layer_TCR = synaptic_rescale_factor * max_g["TCR"]["D"]
+    g_CI_TCR = synaptic_rescale_factor * max_g["TCR"]["CI"]
+    g_TRN_TCR = synaptic_rescale_factor * max_g["TCR"]["TRN"]
 
     # Synaptic Delays
     t_d_l = 8		# Time delay between the layers in cortex and nuclei in thalamus (ms)
@@ -810,7 +702,7 @@ if __name__ == "__main__":
         "Relay_TC_parameters": Rel_TC_parameters,
         "Reticular_parameters": Ret_parameters,
         "Population_size": {pop.label: pop.size for pop in population_list},
-        "Max_g": max_g_inter,
+        "Max_g": max_g,
     }
 
     # Simulate the model
