@@ -5,6 +5,21 @@ The original paper: _Cortical network effects of subthalamic deep brain stimulat
 The original translation by John Fleming, editor: AmirAli Farokhniaee.
 
 # Quickstart guide
+## Setup (using Conda)
+1. Create a Conda environment using the attached .yml file
+```
+conda env create ./environment.yml
+```
+2. Activate the conda environment
+```
+conda activate pynn-tcm
+```
+3. Compile the NEURON mechanisms
+```
+nrnivmodl
+```
+
+## Running the model
 To run the model use
 ```
 python TCM_Build_Run.py

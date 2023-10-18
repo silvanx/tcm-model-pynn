@@ -1,0 +1,17 @@
+name: pynn-tcm-env
+
+channels:
+  - conda-forge
+  - defaults
+
+dependencies:
+  - python=3.9.18
+  - pip
+  - pip:
+      - h5py==3.9.0
+      - neo==0.12.0
+      - nrnutils==0.3.0
+      - numpy==1.26.0
+      - pynn==0.11.0
+      - pyyaml==6.0.1
+      - scipy==1.11.3
