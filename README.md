@@ -2,17 +2,15 @@ The thalamo-cortical microcircuit (TCM) spiking neural network model developed b
 
 The original paper: _Cortical network effects of subthalamic deep brain stimulationin a thalamo-cortical microcircuit model_ by AmirAli Farokhniaee Ph.D. and Madeleine Lowery Ph.D. 2021 Journal of Neural Engineering J. Neural Eng.18(2021) 056006 https://doi.org/10.1088/1741-2552/abee50
 
-The original translation by John Fleming, editor: AmirAli Farokhniaee.
-
 # Quickstart guide
 ## Setup (using Conda)
 1. Create a Conda environment using the attached .yml file
 ```
-conda env create ./environment.yml
+conda env create --file ./environment.yml
 ```
 2. Activate the conda environment
 ```
-conda activate pynn-tcm
+conda activate pynn-tcm-env
 ```
 3. Compile the NEURON mechanisms
 ```
